@@ -2,6 +2,14 @@ package com.stackroute.activitystream.daoimpl;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.stackroute.activitystream.dao.MessageDAO;
 import com.stackroute.activitystream.model.Message;
 
@@ -15,12 +23,22 @@ import com.stackroute.activitystream.model.Message;
  * 					context.  
  * */
 
-
+@Repository("messageDao")
+@Transactional
 public class MessageDAOImpl implements MessageDAO {
-
-	/*
-	 * Autowiring should be implemented for the SessionFactory. 
-	 */
+	
+	private static int pageSize = 8;
+	
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public MessageDAOImpl(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+	
+	private Session getCurrentSession() {
+		return sessionFactory.getCurrentSession();
+	}
 	
 
 	
@@ -30,21 +48,35 @@ public class MessageDAOImpl implements MessageDAO {
 	 * retrieve all existing messages sorted by posted Date in descending order(showing latest
 	 * message first)
 	 */
-	@Override
+	
 	public List<Message> getMessages() {
-		// TODO Auto-generated method stub
-		return null;
+		Query query = getCurrentSession().createQuery("from Message order by postedDate desc");
+		return query.list();
 	}
 
 
 	/*
 	 * Save the message in the database in message table 
 	 */
-	@Override
+	
+	/*public boolean sendMessage(Message message) {
+		message.setPostedDate();
+		getCurrentSession().save(message);
+		return true;
+	}*/
+	
 	public boolean sendMessage(Message message) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+        try {
+            message.setPostedDate();
+            getCurrentSession().save(message);
+            return true;
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            return false;
+        }
+
+    }
 	
 	/*
 	 * Remove the message from the database in message table. Please note that this
@@ -54,8 +86,9 @@ public class MessageDAOImpl implements MessageDAO {
 
 	@Override
 	public boolean removeMessage(Message message) {
-		// TODO Auto-generated method stub
-		return false;
+		getCurrentSession().delete(message);
+		getCurrentSession().flush();
+		return true;
 	}
 
 	

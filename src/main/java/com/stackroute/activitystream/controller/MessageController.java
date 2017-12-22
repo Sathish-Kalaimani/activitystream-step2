@@ -1,11 +1,61 @@
 package com.stackroute.activitystream.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.stackroute.activitystream.dao.MessageDAO;
+import com.stackroute.activitystream.model.Message;
+
 /*
  * Annotate the class with @Controller annotation.@Controller annotation is used to mark 
  * any POJO class as a controller so that Spring can recognize this class as a Controller
  */
+@Controller
 public class MessageController {
 
+	@Autowired
+	private MessageDAO messageDAO;
+	@Autowired
+	private Message message;
+	
+	@RequestMapping("/")
+	public String index(ModelMap model) {
+		model.addAttribute("messages", messageDAO.getMessages());
+		return "index";
+	}
+	
+	/*@PostMapping("/sendMessage")
+	public String sendMessage (@RequestParam("senderName")String name, @RequestParam("message")String msg, ModelMap model) {
+	message.setSenderName(name);
+	message.setMessage(msg);
+	
+	messagedao.sendMessage(message);
+	List<Message> msgList = messagedao.getMessages();
+	model.addAttribute("messageList", msgList);
+	return "redirect:/";
+	}*/
+	
+	
+	@PostMapping("/sendMessage")
+    public String sendMessage(@RequestParam("sender") String sender,@RequestParam("message") String messageContent, ModelMap model) {
+        
+        if(sender==null || sender.isEmpty() || messageContent==null || messageContent.isEmpty()) {
+            model.addAttribute("errorMsg", "SenderName or Message content can't be empty");
+            model.addAttribute("messages", messageDAO.getMessages());
+            
+            return "index";
+        }
+        message.setSenderName(sender);
+        message.setMessage(messageContent);
+        
+        messageDAO.sendMessage(message);
+        
+        return "redirect:/";
+    }
 	/*
 	 * From the problem statement, we can understand that the application
 	 * requires us to implement two functionalities. They are as following:
